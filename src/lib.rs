@@ -1,3 +1,7 @@
+//! # Galapagos
+//!
+//! Low-dependency, simple evolutionary solver.
+
 use rand::{self, Rng};
 
 #[derive(PartialEq)]
@@ -6,24 +10,41 @@ pub enum Goal {
     Minimize,
 }
 
+/// A single solution attempt.
 #[derive(Debug, Clone)]
 pub struct Individual {
+    /// The values this individual has set for its sliders. Some people refer to
+    /// these as "genes".
     pub values: Vec<f32>,
+    /// Cached result of calling `f` with this individual's `values`.
     pub fitness: f32,
 }
 
+/// The near-optimal answer for a given series of evolutions.
 #[derive(Debug)]
 pub struct Solution {
+    /// The most fit individual from a population that evolved over many
+    /// generations.
     pub champion: Individual,
+    /// Optionally store the history of each generation's most fit individual.
+    /// Useful to plot the behavior for debugging.
     pub history: Option<Vec<(f32, f32)>>,
 }
 
+/// Solver configuration.
 #[derive(Debug)]
 pub struct Config {
+    /// The number of individuals to evaluate in each generation.
     pub population_size: u32,
+    /// The number of evolution iterations to run.
     pub generation_count: u32,
+    /// The likelihood of any two "parents" of mixing their "genes" instead of
+    /// passing them on directly.
     pub crossover_rate: f32,
+    /// The likelihood of any one gene changing in value.
     pub mutation_rate: f32,
+    /// Whether or not to store a vector recording the fitness of each
+    /// generation's most fit individual.
     pub record_history: bool,
 }
 
@@ -39,6 +60,34 @@ impl Default for Config {
     }
 }
 
+/// Attempts to find a near-optimal solution for a given equation.
+///
+/// # Arguments
+///
+/// * `f` - The function to solve.
+/// * `sliders` - List of tuples representing min, max bounds for a "slider"
+/// that the solver can modulate when searching for solutions.
+/// * `goal` - Whether to search for a maximal or minimal solution.
+/// * `cfg` - Solver configuration.
+///
+/// # Examples
+///
+/// ```
+/// use galapagos::{solve, Goal};
+/// let solution = solve(
+///     |xs| {
+///         // Sphere function
+///         let x = xs[0];
+///         let y = xs[1];
+///         let z = xs[2];
+///         x.powi(2) + y.powi(2) + z.powi(2)
+///     },
+///     vec![(-5.0, 5.0), (-5.0, 5.0), (-5.0, 5.0)],
+///     Goal::Minimize,
+///     Default::default(),
+/// );
+/// assert_eq!(solution.champion.values.len(), 3);
+/// ```
 pub fn solve<F: Fn(Vec<f32>) -> f32>(
     f: F,
     sliders: Vec<(f32, f32)>,

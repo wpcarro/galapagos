@@ -2,6 +2,8 @@
 
 Simple evolutionary solver written in Rust.
 
+<img src="images/history.png" alt="Graph of fitness over time" width="500" />
+
 ## Usage
 
 ```rust
@@ -26,8 +28,6 @@ fn main() {
 ## History
 
 You can optionally export the fitness of each generation with `record_history`.
-
-<img src="images/history.png" alt="Graph of fitness over time" width="500" />
 
 ```rust
 use matrix_rs::galapagos::{self, Config, Goal};
