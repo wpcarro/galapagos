@@ -1,0 +1,13 @@
+[package]
+name = "galapagos"
+version = "0.1.0"
+authors = ["William Carroll <wpcarro@gmail.com>"]
+edition = "2021"
+description = "Simple evolutionary solver"
+license = "Unlicense"
+repository = "https://github.com/wpcarro/galapagos"
+documentation = "https://docs.rs/galapagos"
+readme = "README.md"
+
+[dependencies]
+rand = "0.8.5"
