@@ -1,5 +1,9 @@
 # Galapagos
 
+[![Crates.io](https://img.shields.io/crates/v/galapagos.svg)](https://crates.io/crates/galapagos)
+[![Docs.rs](https://docs.rs/galapagos/badge.svg)](https://docs.rs/galapagos)
+[![License: Unlicensed](https://img.shields.io/badge/License-Unlicensed-blue.svg)](https://unlicense.org/)
+
 Simple evolutionary solver written in Rust.
 
 <img src="images/history.png" alt="Graph of fitness over time" width="500" />
