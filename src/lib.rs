@@ -82,15 +82,15 @@ impl Default for Config {
 ///         let z = xs[2];
 ///         x.powi(2) + y.powi(2) + z.powi(2)
 ///     },
-///     vec![(-5.0, 5.0), (-5.0, 5.0), (-5.0, 5.0)],
+///     &[(-5.0, 5.0), (-5.0, 5.0), (-5.0, 5.0)],
 ///     Goal::Minimize,
 ///     Default::default(),
 /// );
 /// assert_eq!(solution.champion.values.len(), 3);
 /// ```
-pub fn solve<F: Fn(Vec<f32>) -> f32>(
+pub fn solve<F: Fn(&[f32]) -> f32>(
     f: F,
-    sliders: Vec<(f32, f32)>,
+    sliders: &[(f32, f32)],
     goal: Goal,
     cfg: Config,
 ) -> Solution {
@@ -105,7 +105,7 @@ pub fn solve<F: Fn(Vec<f32>) -> f32>(
     assert!(cfg.generation_count > 1, "Need at least one generation");
 
     let evaluate_fitness = |idv: &mut Individual| -> () {
-        idv.fitness = f(idv.values.clone());
+        idv.fitness = f(&idv.values);
     };
 
     // Function that returns the most fitness individual from a list of
