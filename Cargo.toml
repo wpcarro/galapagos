@@ -1,6 +1,6 @@
 [package]
 name = "galapagos"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["William Carroll <wpcarro@gmail.com>"]
 edition = "2021"
 description = "Simple evolutionary solver"
