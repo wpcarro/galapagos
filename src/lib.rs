@@ -2,6 +2,8 @@
 //!
 //! Low-dependency, simple evolutionary solver.
 
+use core::f32;
+
 use rand::{self, Rng};
 
 #[derive(PartialEq)]
@@ -60,6 +62,41 @@ impl Default for Config {
     }
 }
 
+fn compete_two(goal: &Goal, lhs: &Individual, rhs: &Individual) -> Individual {
+    match goal {
+        Goal::Maximize => {
+            if lhs.fitness > rhs.fitness {
+                lhs.clone()
+            } else {
+                rhs.clone()
+            }
+        }
+        Goal::Minimize => {
+            if lhs.fitness < rhs.fitness {
+                lhs.clone()
+            } else {
+                rhs.clone()
+            }
+        }
+    }
+}
+
+fn compete_many(goal: &Goal, xs: &[Individual]) -> Individual {
+    assert!(xs.len() > 2);
+    match goal {
+        Goal::Maximize => xs
+            .iter()
+            .max_by(|x, y| x.fitness.partial_cmp(&y.fitness).unwrap())
+            .unwrap()
+            .clone(),
+        Goal::Minimize => xs
+            .iter()
+            .min_by(|x, y| x.fitness.partial_cmp(&y.fitness).unwrap())
+            .unwrap()
+            .clone(),
+    }
+}
+
 /// Attempts to find a near-optimal solution for a given equation.
 ///
 /// # Arguments
@@ -108,24 +145,6 @@ pub fn solve<F: Fn(&[f32]) -> f32>(
         idv.fitness = f(&idv.values);
     };
 
-    // Function that returns the most fitness individual from a list of
-    // candidates.
-    let compete = |xs: Vec<Individual>| -> Individual {
-        assert!(xs.len() >= 2);
-        match goal {
-            Goal::Maximize => xs
-                .iter()
-                .max_by(|x, y| x.fitness.partial_cmp(&y.fitness).unwrap())
-                .unwrap()
-                .clone(),
-            Goal::Minimize => xs
-                .iter()
-                .min_by(|x, y| x.fitness.partial_cmp(&y.fitness).unwrap())
-                .unwrap()
-                .clone(),
-        }
-    };
-
     let mut rng = rand::thread_rng();
 
     // population size (1,000)
@@ -149,6 +168,19 @@ pub fn solve<F: Fn(&[f32]) -> f32>(
         Vec::with_capacity(0)
     };
 
+    // Cache the optimum that we've encountered in case we meander away from it.
+    // There is no guarantee that the most fit individual in the last generation
+    // is the most fit individual we observed.
+    let mut global_champion: Individual = match goal {
+        Goal::Maximize => Individual {
+            values: Vec::with_capacity(sliders.len()),
+            fitness: f32::MIN,
+        },
+        Goal::Minimize => Individual {
+            values: Vec::with_capacity(sliders.len()),
+            fitness: f32::MAX,
+        },
+    };
     for generation in 0..cfg.generation_count as usize {
         // host a tournament
         let mut children: Vec<Individual> = Vec::with_capacity(cfg.population_size as usize);
@@ -157,13 +189,14 @@ pub fn solve<F: Fn(&[f32]) -> f32>(
             let j = rng.gen_range(0..cfg.population_size as usize);
             let lhs = &parents[i];
             let rhs = &parents[j];
-            let winner = compete(vec![lhs.clone(), rhs.clone()]);
+            let winner = compete_two(&goal, lhs, rhs);
             children.push(winner);
         }
-        let champion = compete(parents);
+        let local_champion = compete_many(&goal, &parents);
+        global_champion = compete_two(&goal, &local_champion, &global_champion);
 
         if cfg.record_history {
-            history.push((generation as f32, champion.fitness))
+            history.push((generation as f32, local_champion.fitness))
         }
 
         // crossover the winners
@@ -205,9 +238,10 @@ pub fn solve<F: Fn(&[f32]) -> f32>(
         }
         parents = children;
     }
-    let champion = compete(parents);
+    let local_champion = compete_many(&goal, &parents);
+    global_champion = compete_two(&goal, &local_champion, &global_champion);
     Solution {
-        champion,
+        champion: global_champion,
         history: if cfg.record_history {
             Some(history)
         } else {
