@@ -230,8 +230,10 @@ pub fn solve<F: Fn(&[f32]) -> f32>(
             let x = &mut children[i];
             for j in 0..sliders.len() {
                 if rng.gen::<f32>() < cfg.mutation_rate {
-                    x.values[j] =
-                        (x.values[j] + rng.gen_range(-0.5..=0.5)).clamp(sliders[j].0, sliders[j].1);
+                    // Nudge +/-10% of the slider.
+                    let (min, max) = (sliders[j].0, sliders[j].1);
+                    let nudge = 0.10 * (max - min);
+                    x.values[j] = (x.values[j] + rng.gen_range(-nudge..=nudge)).clamp(min, max);
                 }
             }
             evaluate_fitness(x);
