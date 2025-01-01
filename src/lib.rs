@@ -48,6 +48,8 @@ pub struct Config {
     /// Whether or not to store a vector recording the fitness of each
     /// generation's most fit individual.
     pub record_history: bool,
+    /// Whether or not to print a progress bar periodically.
+    pub print_progress: bool,
 }
 
 impl Default for Config {
@@ -58,6 +60,7 @@ impl Default for Config {
             crossover_rate: 0.70,
             mutation_rate: 0.10,
             record_history: false,
+            print_progress: false,
         }
     }
 }
@@ -182,6 +185,12 @@ pub fn solve<F: Fn(&[f32]) -> f32>(
         },
     };
     for generation in 0..cfg.generation_count as usize {
+        if cfg.print_progress && rng.gen::<f32>() < 0.10 {
+            println!(
+                "Loading... {:.1}%",
+                generation as f32 / cfg.generation_count as f32 * 100.0
+            );
+        }
         // host a tournament
         let mut children: Vec<Individual> = Vec::with_capacity(cfg.population_size as usize);
         for _ in 0..cfg.population_size {
